@@ -49,15 +49,22 @@ class Main(object):
                         top_one = (up_to_date_win_count > previous_win_count and region != "agg")
                         top_ten = (up_to_date_topten_count > previous_topten_count and region != "agg")
 
+                        top = "?"
+
                         if top_one:
-                            prefix = "TOP 1"
+                            top = "1"
                         elif top_ten:
-                            prefix = "TOP 10"
+                            top = "2"
 
                         if top_one or top_ten:
-                            text = prefix + " (" + mode + "@" + region + ") : " + profile_name
-                            log.info(text)
-                            await discord_client.send_message(broadcast_channel, text)
+                            up_to_date_kills_count = profile.get_kills_count(region, season, mode)
+                            previous_kills_count = snapshot.get_kills_count(region, season, mode)
+                            kills = up_to_date_kills_count - previous_kills_count
+
+                            msg = "TOP {} ({}@{}): {} -> {} kills".format(top, mode, region, profile_name, kills)
+                            
+                            log.info(msg)
+                            await discord_client.send_message(broadcast_channel, msg)
 
                     self.snapshots[profile_name] = profile
 
