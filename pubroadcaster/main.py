@@ -54,7 +54,7 @@ class Main(object):
                         if top_one:
                             top = "1"
                         elif top_ten:
-                            top = "2"
+                            top = "10"
 
                         if top_one or top_ten:
                             up_to_date_kills_count = profile.get_kills_count(region, season, mode)
