@@ -3,6 +3,7 @@ import discord
 import asyncio
 import logging as log
 from pubg_tracker import PubgTracker
+from message_builder import MessageBuilder
 
 class Main(object):
     def __init__(self, tracking_interval, pubg_tracker_api_key, discord_bot_token, discord_channel_id, profile_names):
@@ -40,31 +41,19 @@ class Main(object):
                         season = stats["Season"]
                         mode = stats["Match"]
 
-                        up_to_date_win_count = profile.get_wins_count(region, season, mode)
-                        previous_win_count = snapshot.get_wins_count(region, season, mode)
+                        win = profile.has_incremented_from(snapshot, region, season, mode, u'Wins')
+                        topten = profile.has_incremented_from(snapshot, region, season, mode, u'Top10s')
 
-                        up_to_date_topten_count = profile.get_topten_count(region, season, mode)
-                        previous_topten_count = snapshot.get_topten_count(region, season, mode)
+                        message = None
 
-                        top_one = (up_to_date_win_count > previous_win_count and region != "agg")
-                        top_ten = (up_to_date_topten_count > previous_topten_count and region != "agg")
-
-                        top = "?"
-
-                        if top_one:
-                            top = "1"
-                        elif top_ten:
-                            top = "10"
-
-                        if top_one or top_ten:
-                            up_to_date_kills_count = profile.get_kills_count(region, season, mode)
-                            previous_kills_count = snapshot.get_kills_count(region, season, mode)
-                            kills = up_to_date_kills_count - previous_kills_count
-
-                            msg = "TOP {} ({}@{}): {} -> {} kills".format(top, mode, region, profile_name, kills)
+                        if win and region != "agg":
+                            message = MessageBuilder().build_win(profile_name, snapshot, profile, region, season, mode)
+                        elif topten and region != "agg":
+                            message = MessageBuilder().build_topten(snapshot, profile)
                             
-                            log.info(msg)
-                            await discord_client.send_message(broadcast_channel, msg)
+                        if message is not None:
+                            log.info(message)
+                            await discord_client.send_message(broadcast_channel, message)
 
                     self.snapshots[profile_name] = profile
 
