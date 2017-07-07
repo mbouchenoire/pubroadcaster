@@ -31,13 +31,13 @@ class MessageBuilder(object):
             message += "\n* {}: {}min".format("Time Survived", int(time_survived // 60))
 
         walk_distance = walk_distance if walk_distance > 0 else 1
-        ride_percentage = (ride_distance / walk_distance) * 100
+        ride_percentage = (ride_distance / (ride_distance + walk_distance)) * 100
 
         if longest_kill_increment > 0:
             message += "\n> beat his longest kill record with a {} meters shot!".format(longest_kill)
 
         if ride_percentage > 80:
-            message += "\n> traveled {}% of his distance by vehicule!".format(ride_percentage)
+            message += "\n> traveled {}% by vehicule!".format(int(ride_percentage))
 
         if ride_distance == 0:
             message += "\n> did not use a single vehicule!"
