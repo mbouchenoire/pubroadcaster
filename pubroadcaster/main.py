@@ -56,7 +56,7 @@ class Main(object):
                                 await discord_client.send_message(broadcast_channel, message)
 
                         self.snapshots[profile_name] = profile
-                    except expression as identifier:
+                    except:
                         log.error(identifier)
                     
 
