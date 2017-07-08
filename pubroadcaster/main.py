@@ -1,6 +1,7 @@
 import time
 import discord
 import asyncio
+import traceback
 import logging as log
 from pubg_tracker import PubgTracker
 from message_builder import MessageBuilder
@@ -56,8 +57,8 @@ class Main(object):
                                 await discord_client.send_message(broadcast_channel, message)
 
                         self.snapshots[profile_name] = profile
-                    except:
-                        log.error(identifier)
+                    except Exception as e:
+                        log.error(traceback.format_exc())
                     
 
         discord_client.loop.create_task(check_stats_task())
