@@ -1,4 +1,5 @@
 import json
+import logging as log
 
 class Profile(object):
     INCREMENTAL_FIELD_NAMES = [ u'Kills', u'Assists', u'DBNOs', u'DamageDealt', u'TeamKills', u'Suicides', u'VehiculeDestroys', u'RoadKills',
@@ -32,7 +33,14 @@ class Profile(object):
         if int_value is not None:
             return int_value
 
-        return round(self.get_field(region, season, mode, field_name, 'ValueDec'), 1)
+        dec_value = self.get_field(region, season, mode, field_name, 'ValueDec')
+
+        if dec_value is not None:
+            return round(dec_value, 1)
+
+        log.warning(field_name + " field has value 'None'")
+
+        return 0
 
     def get_increment_from(self, old_profile, region, season, mode, field_name):
         up_to_date_field_value = self.get_field_numerical_value(region, season, mode, field_name)
