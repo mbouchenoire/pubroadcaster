@@ -42,8 +42,8 @@ class Main(object):
                             season = stats["Season"]
                             mode = stats["Match"]
 
-                            win = profile.has_incremented_from(snapshot, region, season, mode, u'Wins')
-                            topten = profile.has_incremented_from(snapshot, region, season, mode, u'Top10s')
+                            win = profile.has_won(snapshot, region, season, mode)
+                            topten = profile.has_topten(snapshot, region, season, mode)
 
                             message = None
 
