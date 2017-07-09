@@ -117,7 +117,7 @@ class MessageBuilder(object):
     def build_topten(self, profile_name, old_profile, new_profile, region, season, mode):
         message = "```Markdown"
         
-        message += "\n# TOP TEN: {}".format(profile_name)
+        message += "\n# TOP 10: {}".format(profile_name)
         message += "\n> {}@{}".format(mode, region)
         message += "\n"
         message += self.get_game_stats(old_profile, new_profile, region, season, mode)
