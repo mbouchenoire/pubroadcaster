@@ -38,7 +38,7 @@ class Profile(object):
         if dec_value is not None:
             return round(dec_value, 1)
 
-        log.warning(field_name + " field has value 'None'")
+        log.warning(field_name + " field has value 'None' for " + mode + "@" + region)
 
         return 0
 
@@ -53,11 +53,11 @@ class Profile(object):
     def has_won(self, old_profile, region, season, mode):
         wins_incremented = self.has_incremented_from(old_profile, region, season, mode, u'Wins')
         incremented_kills = self.get_increment_from(old_profile, region, season, mode, u'Kills')
-        total_kills = self.get_field_numerical_value(old_profile, season, mode, u'Kills')
+        total_kills = self.get_field_numerical_value(region, season, mode, u'Kills')
         return (wins_incremented and incremented_kills >= 0 and incremented_kills <= total_kills)
 
     def has_topten(self, old_profile, region, season, mode):
         toptens_incremented = self.has_incremented_from(old_profile, region, season, mode, u'Top10s')
         incremented_kills = self.get_increment_from(old_profile, region, season, mode, u'Kills')
-        total_kills = self.get_field_numerical_value(old_profile, season, mode, u'Kills')
+        total_kills = self.get_field_numerical_value(region, season, mode, u'Kills')
         return (toptens_incremented and incremented_kills >= 0 and incremented_kills <= total_kills)
