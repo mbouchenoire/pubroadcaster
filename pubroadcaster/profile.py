@@ -19,7 +19,12 @@ class Profile(object):
                         return stat[field_value]
 
     def get_field_percentile(self, region, season, mode, field_name):
-        return int(self.get_field(region, season, mode, field_name, 'percentile'))
+        percentile_integer = self.get_field(region, season, mode, field_name, 'percentile')
+
+        if percentile_integer is None:
+            return -1
+        else:
+            return percentile_integer
 
     def get_field_value(self, region, season, mode, field_name):
         return self.get_field(region, season, mode, field_name, 'value')

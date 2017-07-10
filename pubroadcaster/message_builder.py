@@ -53,6 +53,9 @@ class MessageBuilder(object):
     def get_global_stats(self, profile, region, season, mode):
         rounds_played = profile.get_field_numerical_value(region, season, mode, u'RoundsPlayed')
 
+        if rounds_played == 0:
+            return "> 0 games played!"
+
         rating = profile.get_field_display_value(region, season, mode, u'Rating')
         rating_percentile = profile.get_field_percentile(region, season, mode, u'Rating')
 
@@ -99,7 +102,7 @@ class MessageBuilder(object):
 
         if mode != "solo":
             message += "\n" + template.format("Revives Pg", revives_pg, revives_pg_percentile)
-            
+
         message += "\n" + template.format("Time Survived Pg", time_survived_pg, time_survived_pg_percentile)
 
         return message
@@ -132,4 +135,14 @@ class MessageBuilder(object):
 
         return message
 
-    
+    def build_stats(self, profile_name, profile, region, season, mode):
+        message = "```Markdown"
+        
+        message += "\n# {}".format(profile_name)
+        message += "\n\n> stats {}@{}".format(mode, region)
+        message += "\n"
+        message += self.get_global_stats(profile, region, season, mode)
+
+        message += "```"
+
+        return message

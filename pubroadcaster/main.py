@@ -5,6 +5,7 @@ import traceback
 import logging as log
 from pubg_tracker import PubgTracker
 from message_builder import MessageBuilder
+from command_handler import CommandHandler
 
 class Main(object):
     def __init__(self, tracking_interval, pubg_tracker_api_key, discord_bot_token, discord_channel_id, profile_names):
@@ -18,6 +19,10 @@ class Main(object):
     def run(self):
         """Runs the bot"""
         discord_client = discord.Client()
+
+        @discord_client.event
+        async def on_message(message):
+            await CommandHandler(discord_client, self.tracker, MessageBuilder()).handle(message)
         
         async def check_stats_task():
             await discord_client.wait_until_ready()
@@ -37,6 +42,11 @@ class Main(object):
                         known_snapshot = profile_name in self.snapshots
                         snapshot = self.snapshots[profile_name] if known_snapshot else profile
 
+                        if profile_name == "KEJOW":
+                            profile_name = "Laurent Ournac"
+
+                        display_name = "Laurent Ournac" if profile_name == "KEJOW" else profile_name
+
                         for stats in profile.Stats:
                             region = stats["Region"]
                             season = stats["Season"]
@@ -48,9 +58,9 @@ class Main(object):
                             message = None
 
                             if win and region != "agg":
-                                message = MessageBuilder().build_win(profile_name, snapshot, profile, region, season, mode)
+                                message = MessageBuilder().build_win(display_name, snapshot, profile, region, season, mode)
                             elif topten and region != "agg":
-                                message = MessageBuilder().build_topten(profile_name, snapshot, profile, region, season, mode)
+                                message = MessageBuilder().build_topten(display_name, snapshot, profile, region, season, mode)
                                 
                             if message is not None:
                                 log.info(message)
