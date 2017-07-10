@@ -90,10 +90,16 @@ class MessageBuilder(object):
         message += "\n" + template.format("Top 10 Rate", top_ten_ratio,  top_ten_ratio_percentile)
         message += "\n" + template.format("K/D", kd, kd_percentile)
         message += "\n" + template.format("Kills Pg", kills_pg, kills_pg_percentile)
-        message += "\n" + template_without_perc.format("Assists Pg", round(assists_pg, 1))
-        message += "\n" + template_without_perc.format("Knock Outs Pg", round(dbnos_pg, 1))
+
+        if mode != "solo":
+            message += "\n" + template_without_perc.format("Assists Pg", round(assists_pg, 1))
+            message += "\n" + template_without_perc.format("Knock Outs Pg", round(dbnos_pg, 1))
+
         message += "\n" + template.format("Damage Pg", int(damage_pg), damage_pg_percentile)
-        message += "\n" + template.format("Revives Pg", revives_pg, revives_pg_percentile)
+
+        if mode != "solo":
+            message += "\n" + template.format("Revives Pg", revives_pg, revives_pg_percentile)
+            
         message += "\n" + template.format("Time Survived Pg", time_survived_pg, time_survived_pg_percentile)
 
         return message
