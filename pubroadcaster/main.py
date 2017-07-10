@@ -42,9 +42,6 @@ class Main(object):
                         known_snapshot = profile_name in self.snapshots
                         snapshot = self.snapshots[profile_name] if known_snapshot else profile
 
-                        if profile_name == "KEJOW":
-                            profile_name = "Laurent Ournac"
-
                         display_name = "Laurent Ournac" if profile_name == "KEJOW" else profile_name
 
                         for stats in profile.Stats:
