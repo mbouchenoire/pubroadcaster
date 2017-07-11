@@ -56,13 +56,9 @@ class Profile(object):
         return self.get_increment_from(old_profile, region, season, mode, field_name) > 0
 
     def has_won(self, old_profile, region, season, mode):
-        wins_incremented = self.has_incremented_from(old_profile, region, season, mode, u'Wins')
-        incremented_kills = self.get_increment_from(old_profile, region, season, mode, u'Kills')
-        total_kills = self.get_field_numerical_value(region, season, mode, u'Kills')
-        return (wins_incremented and incremented_kills >= 0 and incremented_kills <= total_kills)
+        incremented_wins = self.get_increment_from(old_profile, region, season, mode, u'Wins')
+        return (incremented_wins == 1)
 
     def has_topten(self, old_profile, region, season, mode):
-        toptens_incremented = self.has_incremented_from(old_profile, region, season, mode, u'Top10s')
-        incremented_kills = self.get_increment_from(old_profile, region, season, mode, u'Kills')
-        total_kills = self.get_field_numerical_value(region, season, mode, u'Kills')
-        return (toptens_incremented and incremented_kills >= 0 and incremented_kills <= total_kills)
+        incremented_toptens = self.has_incremented_from(old_profile, region, season, mode, u'Top10s')
+        return (incremented_toptens == 1)
