@@ -1,3 +1,5 @@
+from pubg import GameContext
+
 class CommandHandler(object):
     def __init__(self, discord_client, pubg_tracker, message_builder):
         self.discord_client = discord_client
@@ -33,7 +35,8 @@ class CommandHandler(object):
         if region not in self.ALLOWED_REGIONS:
             return await self.discord_client.send_message(command.channel, "'" + region + "' is not a valid region!")
 
-        profile = self.pubg_tracker.get_profile(profile_name)
-        message = self.message_builder.build_stats(profile_name, profile, region, profile.defaultSeason, mode)
+        profile = self.pubg_tracker.retreive_profile(profile_name)
+        game_context = GameContext(profile.defaultSeason, region, mode)
+        message = self.message_builder.build_global_stats(profile.get_global_stats(game_context))
 
         return await self.discord_client.send_message(command.channel, message)

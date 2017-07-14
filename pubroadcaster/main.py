@@ -3,7 +3,7 @@ import discord
 import asyncio
 import traceback
 import logging as log
-from pubg_tracker import PubgTracker
+from pubg import GameContext, GameFacts, GameStats, Profile, PubgTracker
 from message_builder import MessageBuilder
 from command_handler import CommandHandler
 
@@ -20,6 +20,12 @@ class Main(object):
         """Runs the bot"""
         discord_client = discord.Client()
 
+        async def broadcast_incremented_stats(incremented_stats: GameStats, game_context: GameContext, header: str, discord_client: discord.Client, broadcast_channel: discord.Channel):
+            for game_context in incremented_stats.keys():
+                contextualized_incremented_stats = incremented_stats[game_context]
+                message = MessageBuilder().build_result_message(header, contextualized_incremented_stats, game_context)
+                await discord_client.send_message(broadcast_channel, message)
+
         @discord_client.event
         async def on_message(message):
             await CommandHandler(discord_client, self.tracker, MessageBuilder()).handle(message)
@@ -27,46 +33,53 @@ class Main(object):
         async def check_stats_task():
             await discord_client.wait_until_ready()
             log.info("ready to send messages to the discord channel with id: " + self.discord_channel_id)
-
             broadcast_channel = discord_client.get_channel(id=self.discord_channel_id)
 
             while not discord_client.is_closed:
-                await asyncio.sleep(self.tracking_interval)
-                log.info("scaning players: " + ",".join(self.profile_names) + " (interval: " + str(self.tracking_interval) + "s)...")
+                try:
+                    await asyncio.sleep(self.tracking_interval)
+                    log.info("scaning players: " + ",".join(self.profile_names) + " (interval: " + str(self.tracking_interval) + "s)...")
 
-                for profile_name in self.profile_names:
-                    try:
+                    incremented_stats_wins = {}
+                    incremented_stats_toptens = {}
+
+                    for profile_name in self.profile_names:
                         await asyncio.sleep(1) # the pubgtracker api does not allow more than 1 query per second
                         log.debug("tracking " + profile_name + "...")
-                        profile = self.tracker.get_profile(profile_name)
+                        profile = self.tracker.retreive_profile(profile_name)
                         known_snapshot = profile_name in self.snapshots
                         snapshot = self.snapshots[profile_name] if known_snapshot else profile
 
-                        display_name = "Laurent Ournac" if profile_name == "KEJOW" else profile_name
-
                         for stats in profile.Stats:
-                            region = stats["Region"]
-                            season = stats["Season"]
-                            mode = stats["Match"]
+                            game_context = GameContext(stats["Season"], stats["Region"], stats["Match"])
 
-                            win = profile.has_won(snapshot, region, season, mode)
-                            topten = profile.has_topten(snapshot, region, season, mode)
+                            if game_context.region == "agg":
+                                continue
 
-                            message = None
+                            new_win = profile.has_won(snapshot, game_context)
+                            new_topten = profile.has_topten(snapshot, game_context)
 
-                            if win and region != "agg":
-                                message = MessageBuilder().build_win(display_name, snapshot, profile, region, season, mode)
-                            elif topten and region != "agg":
-                                message = MessageBuilder().build_topten(display_name, snapshot, profile, region, season, mode)
+                            relevant_incremented_stats = None
+
+                            if new_win:
+                                relevant_incremented_stats = incremented_stats_wins
+                            elif new_topten:
+                                relevant_incremented_stats = incremented_stats_toptens
                                 
-                            if message is not None:
-                                log.info(message)
-                                await discord_client.send_message(broadcast_channel, message)
+                            if relevant_incremented_stats is not None:
+                                incremented_stats = profile.get_game_stats(snapshot, game_context)
+
+                                if game_context in relevant_incremented_stats:
+                                    relevant_incremented_stats[game_context].append(incremented_stats)
+                                else:
+                                    relevant_incremented_stats[game_context] = [incremented_stats]
 
                         self.snapshots[profile_name] = profile
-                    except Exception as e:
-                        log.error(traceback.format_exc())
-                    
+
+                    await broadcast_incremented_stats(incremented_stats_wins, game_context, "WIN", discord_client, broadcast_channel)
+                    await broadcast_incremented_stats(incremented_stats_toptens, game_context, "TOP 10", discord_client, broadcast_channel)
+                except Exception as e:
+                    log.error(traceback.format_exc())
 
         discord_client.loop.create_task(check_stats_task())
         discord_client.run(self.discord_bot_token)
