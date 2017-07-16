@@ -97,7 +97,7 @@ class Profile(object):
         damage_dealt = self.__get_increment_from__(old_profile, context, u'DamageDealt')
         revives = self.__get_increment_from__(old_profile, context, u'Revives')
         seconds_survived = self.__get_increment_from__(old_profile, context, u'TimeSurvived')
-        minutes_survived = seconds_survived // 60
+        minutes_survived = int(seconds_survived // 60)
 
         return GameStats(self, context, kills, assists, dbnos, damage_dealt, revives, minutes_survived)
 
@@ -118,18 +118,18 @@ class GameStats(object):
     def headers(self) -> [str]:
         h = ["* Player"]
 
-        h.append("Kills")
+        h.append("Kil.")
         
         if self.context.mode != "solo":
-            h.append("Assists")
-            h.append("KOs")
+            h.append("Fin.")
+            h.append("Kno.")
 
-        h.append("Damage")
+        h.append("Dam.")
 
         if self.context.mode != "solo":
-            h.append("Revives")
+            h.append("Rev.")
 
-        h.append("Survived (min)")
+        h.append("Sur.")
 
         return h
 
@@ -147,7 +147,7 @@ class GameStats(object):
         if self.context.mode != "solo":
             stats.append(self.revives)
             
-        stats.append(self.minutes_survived)
+        stats.append(str(self.minutes_survived) + "min")
 
         return stats
 
