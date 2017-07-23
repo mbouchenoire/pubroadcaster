@@ -1,11 +1,13 @@
 from tabulate import tabulate
 from pubg import GameContext, GameStats, GlobalStats
 
+
 class MessageBuilder(object):
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
-    def build_global_stats(self, stats: GlobalStats) -> str:
+    @staticmethod
+    def build_global_stats(stats: GlobalStats) -> str:
         message = "```Markdown\n"
         message += "# " + stats.profile.name + "\n"
         message += "> " + stats.game_context.mode + "@" + stats.game_context.region + "\n"
@@ -15,7 +17,8 @@ class MessageBuilder(object):
 
         return message
 
-    def build_result_message(self, message_header: str, stats: GameStats, game_context: GameContext):
+    @staticmethod
+    def build_result_message(message_header: str, stats: GameStats, game_context: GameContext) -> str:
         concatenated_stats = []
 
         for individual_stats in stats:

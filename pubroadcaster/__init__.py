@@ -2,8 +2,10 @@ import os
 import logging
 from main import Main
 
+
 def check_environment_variable(key, value):
-    if not value: raise ValueError("environment variable '" + key + "' must be set")
+    if not value:
+        raise ValueError("environment variable '" + key + "' must be set")
 
 logging.basicConfig(level=logging.INFO)
 

@@ -1,22 +1,23 @@
 import logging as log
 import json
 import http.client
-import hashlib
+
 
 class GameContext(object):
-    def __init__(self, season: str, region: str, mode: str):
+    def __init__(self, season: str, region: str, mode: str) -> None:
         self.season = season
         self.region = region
         self.mode = mode
 
     def __eq__(self, other) -> bool:
-        return (other.season == self.season and other.region == self.region and other.mode == self.mode)
+        return other.season == self.season and other.region == self.region and other.mode == self.mode
 
     def __hash__(self) -> int:
         return hash(self.season + self.region + self.mode)
 
+
 class Profile(object):
-    def __init__(self, j, profile_name):
+    def __init__(self, j, profile_name) -> None:
         self.__dict__ = json.loads(j)
         self.name = profile_name
 
@@ -44,7 +45,7 @@ class Profile(object):
         if dec_value is not None:
             return round(dec_value, 1)
 
-        log.warning(field_name + " field has value 'None' for " + mode + "@" + region)
+        log.warning(field_name + " field has value 'None' for " + context.mode + "@" + context.region)
 
         return 0
 
@@ -55,11 +56,11 @@ class Profile(object):
 
     def has_won(self, old_profile, context: GameContext) -> bool:
         incremented_wins = self.__get_increment_from__(old_profile, context, u'Wins')
-        return (incremented_wins == 1)
+        return incremented_wins == 1
 
     def has_topten(self, old_profile, context: GameContext) -> bool:
         incremented_toptens = self.__get_increment_from__(old_profile, context, u'Top10s')
-        return (incremented_toptens == 1)
+        return incremented_toptens == 1
 
     def get_game_facts(self, old_profile, context: GameContext) -> 'GameFacts':
         walk_distance = self.__get_increment_from__(old_profile, context, u'WalkDistance')
@@ -104,6 +105,7 @@ class Profile(object):
     def get_global_stats(self, context: GameContext) -> 'GlobalStats':
         return GlobalStats(self, context)
 
+
 class GameStats(object):
     def __init__(self, profile: Profile, context: GameContext, kills: int, assists: int, dbnos: int, damage_dealt: float, revives: int, minutes_survived: int):
         self.profile = profile
@@ -116,10 +118,8 @@ class GameStats(object):
         self.minutes_survived = minutes_survived
 
     def headers(self) -> [str]:
-        h = ["* Player"]
+        h = ["* Player", "Kil."]
 
-        h.append("Kil.")
-        
         if self.context.mode != "solo":
             h.append("Fin.")
             h.append("Kno.")
@@ -134,9 +134,7 @@ class GameStats(object):
         return h
 
     def values(self) -> list:
-        stats = ["* " + self.profile.name]
-
-        stats.append(self.kills)
+        stats = ["* " + self.profile.name, self.kills]
 
         if self.context.mode != "solo":
             stats.append(self.assists)
@@ -151,24 +149,22 @@ class GameStats(object):
 
         return stats
 
+
 class GlobalStats(object):
-    def __init__(self, profile: Profile, game_context: GameContext):
+    def __init__(self, profile: Profile, game_context: GameContext) -> None:
         self.profile = profile
         self.game_context = game_context
 
     def values(self) -> list:
-        stats = [["* Stat", "Value", "Top"]]
-
-        stats.append(self.get_field_tuple(u"Rating"))
-        stats.append(self.get_field_tuple(u"WinRatio"))
-        stats.append(self.get_field_tuple(u"Top10Ratio"))
-        stats.append(self.get_field_tuple(u"KillDeathRatio"))
-        stats.append(self.get_field_tuple(u"KillsPg"))
-        stats.append(self.get_field_tuple(u"DamagePg"))
-        stats.append(self.get_field_tuple(u"RevivesPg"))
-        stats.append(self.get_field_tuple(u"TimeSurvivedPg"))
-
-        return stats
+        return [["* Stat", "Value", "Top"],
+                self.get_field_tuple(u"Rating"),
+                self.get_field_tuple(u"WinRatio"),
+                self.get_field_tuple(u"Top10Ratio"),
+                self.get_field_tuple(u"KillDeathRatio"),
+                self.get_field_tuple(u"KillsPg"),
+                self.get_field_tuple(u"DamagePg"),
+                self.get_field_tuple(u"RevivesPg"),
+                self.get_field_tuple(u"TimeSurvivedPg")]
 
     def get_field_tuple(self, field_name):
         label = self.profile.__get_field__(self.game_context, field_name, u'label')
@@ -188,16 +184,17 @@ class GameFacts(object):
         self.context = context
         self.facts = facts
 
+
 class PubgTracker(object):
     def __init__(self, api_key: str):
-        self.host = "pubgtracker.com"
-        self.endpoint = "/api/profile/pc/"
-        self.headers = {"TRN-Api-Key": api_key}
+        self._host = "pubgtracker.com"
+        self._endpoint = "/api/profile/pc/"
+        self._headers = {"TRN-Api-Key": api_key}
 
     def retreive_profile(self, name: str) -> Profile:
         """Returns the PUBG player profile"""
-        conn = http.client.HTTPSConnection(self.host)
-        conn.request("GET", self.endpoint + name, headers=self.headers)
+        conn = http.client.HTTPSConnection(self._host)
+        conn.request("GET", self._endpoint + name, headers=self._headers)
         response = conn.getresponse()
 
         data = response.read()

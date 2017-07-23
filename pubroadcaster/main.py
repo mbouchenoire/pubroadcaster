@@ -7,6 +7,7 @@ from pubg import GameContext, GameFacts, GameStats, Profile, PubgTracker
 from message_builder import MessageBuilder
 from command_handler import CommandHandler
 
+
 class Main(object):
     def __init__(self, tracking_interval, pubg_tracker_api_key, discord_bot_token, discord_channel_id, profile_names):
         self.tracking_interval = tracking_interval
@@ -23,7 +24,7 @@ class Main(object):
         async def broadcast_incremented_stats(incremented_stats: GameStats, game_context: GameContext, header: str, discord_client: discord.Client, broadcast_channel: discord.Channel):
             for game_context in incremented_stats.keys():
                 contextualized_incremented_stats = incremented_stats[game_context]
-                message = MessageBuilder().build_result_message(header, contextualized_incremented_stats, game_context)
+                message = MessageBuilder.build_result_message(header, contextualized_incremented_stats, game_context)
                 await discord_client.send_message(broadcast_channel, message)
 
         @discord_client.event
