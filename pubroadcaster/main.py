@@ -36,50 +36,66 @@ class Main(object):
             broadcast_channel = discord_client.get_channel(id=self.discord_channel_id)
 
             while not discord_client.is_closed:
-                try:
-                    await asyncio.sleep(self.tracking_interval)
-                    log.info("scaning players: " + ",".join(self.profile_names) + " (interval: " + str(self.tracking_interval) + "s)...")
+                log.info("scaning players: " + ",".join(self.profile_names) + " (interval: " + str(self.tracking_interval) + "s)...")
 
-                    incremented_stats_wins = {}
-                    incremented_stats_toptens = {}
+                incremented_stats_wins = {}
+                incremented_stats_toptens = {}
+                temp_snapshots = {}
 
-                    for profile_name in self.profile_names:
-                        await asyncio.sleep(1) # the pubgtracker api does not allow more than 1 query per second
-                        log.debug("tracking " + profile_name + "...")
+                for profile_name in self.profile_names:
+                    log.debug("tracking " + profile_name + "...")
+
+                    profile = None
+
+                    try:
                         profile = self.tracker.retreive_profile(profile_name)
-                        known_snapshot = profile_name in self.snapshots
-                        snapshot = self.snapshots[profile_name] if known_snapshot else profile
+                    except:
+                        log.error(profile_name + "'s profile could not be retreived")
+                        log.error(traceback.format_exc())
+                        break
 
-                        for stats in profile.Stats:
-                            game_context = GameContext(stats["Season"], stats["Region"], stats["Match"])
+                    known_snapshot = profile_name in self.snapshots
+                    snapshot = self.snapshots[profile_name] if known_snapshot else profile
 
-                            if game_context.region == "agg":
-                                continue
+                    profile_stats = profile.Stats if hasattr(profile, "Stats") else []
 
-                            new_win = profile.has_won(snapshot, game_context)
-                            new_topten = profile.has_topten(snapshot, game_context)
+                    for stats in profile_stats:
+                        game_context = GameContext(stats["Season"], stats["Region"], stats["Match"])
 
-                            relevant_incremented_stats = None
+                        if game_context.region == "agg":
+                            continue
 
-                            if new_win:
-                                relevant_incremented_stats = incremented_stats_wins
-                            elif new_topten:
-                                relevant_incremented_stats = incremented_stats_toptens
-                                
-                            if relevant_incremented_stats is not None:
-                                incremented_stats = profile.get_game_stats(snapshot, game_context)
+                        new_win = profile.has_won(snapshot, game_context)
+                        new_topten = profile.has_topten(snapshot, game_context)
 
-                                if game_context in relevant_incremented_stats:
-                                    relevant_incremented_stats[game_context].append(incremented_stats)
-                                else:
-                                    relevant_incremented_stats[game_context] = [incremented_stats]
+                        relevant_incremented_stats = None
 
-                        self.snapshots[profile_name] = profile
+                        if new_win:
+                            log.info(profile_name + " registered a new win")
+                            relevant_incremented_stats = incremented_stats_wins
+                        elif new_topten:
+                            log.info(profile_name + " registered a new top 10")
+                            relevant_incremented_stats = incremented_stats_toptens
 
-                    await broadcast_incremented_stats(incremented_stats_wins, game_context, "WIN", discord_client, broadcast_channel)
-                    await broadcast_incremented_stats(incremented_stats_toptens, game_context, "TOP 10", discord_client, broadcast_channel)
-                except Exception as e:
-                    log.error(traceback.format_exc())
+                        if relevant_incremented_stats is not None:
+                            incremented_stats = profile.get_game_stats(snapshot, game_context)
+
+                            if game_context in relevant_incremented_stats:
+                                relevant_incremented_stats[game_context].append(incremented_stats)
+                            else:
+                                relevant_incremented_stats[game_context] = [incremented_stats]
+
+                    temp_snapshots[profile_name] = profile
+                    await asyncio.sleep(1)  # the pubgtracker api does not allow more than 1 query per second
+
+                # We save the retreived stats only if every profile has been successfully retreived
+                for profile_name in temp_snapshots.keys():
+                    self.snapshots[profile_name] = temp_snapshots[profile_name]
+
+                await broadcast_incremented_stats(incremented_stats_wins, game_context, "WIN", discord_client, broadcast_channel)
+                await broadcast_incremented_stats(incremented_stats_toptens, game_context, "TOP 10", discord_client, broadcast_channel)
+
+                await asyncio.sleep(self.tracking_interval)
 
         discord_client.loop.create_task(check_stats_task())
         discord_client.run(self.discord_bot_token)
