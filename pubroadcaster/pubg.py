@@ -51,11 +51,19 @@ class Profile(object):
         warn = "{} field has value 'None' for {}: {}@{}".format(field_name, self.name, context.mode, context.region)
         log.warning(warn)
 
-        return -1
+        return None
 
     def __get_increment_from__(self, old_profile, context: GameContext, field_name: str) -> float:
         up_to_date_field_value = self.__get_field_numerical_value__(context, field_name)
+
+        if up_to_date_field_value is None:
+            return None
+
         old_field_value = old_profile.__get_field_numerical_value__(context, field_name)
+
+        if old_field_value is None:
+            return None
+
         return up_to_date_field_value - old_field_value
 
     def has_won(self, old_profile, context: GameContext) -> bool:
@@ -152,6 +160,9 @@ class GameStats(object):
         stats.append(str(self.minutes_survived) + "min")
 
         return stats
+
+    def score(self):
+        return self.damage_dealt
 
 
 class GlobalStats(object):

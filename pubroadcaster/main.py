@@ -6,6 +6,7 @@ import logging as log
 from pubg import GameContext, GameFacts, GameStats, Profile, PubgTracker
 from message_builder import MessageBuilder
 from command_handler import CommandHandler
+from commands import UpdateKingOfTheHillCommand
 
 
 class Main(object):
@@ -21,11 +22,23 @@ class Main(object):
         """Runs the bot"""
         discord_client = discord.Client()
 
-        async def broadcast_incremented_stats(incremented_stats: GameStats, game_context: GameContext, header: str, discord_client: discord.Client, broadcast_channel: discord.Channel):
+        async def broadcast_incremented_stats(incremented_stats: GameStats,
+                                              header: str,
+                                              broadcast_channel: discord.Channel,
+                                              koth: bool):
+
+            profile_already_updated = False
+
             for game_context in incremented_stats.keys():
                 contextualized_incremented_stats = incremented_stats[game_context]
                 message = MessageBuilder.build_result_message(header, contextualized_incremented_stats, game_context)
+
+                await asyncio.sleep(1)
                 await discord_client.send_message(broadcast_channel, message)
+
+                if koth and len(contextualized_incremented_stats) > 0 and not profile_already_updated:
+                    await UpdateKingOfTheHillCommand(discord_client, contextualized_incremented_stats).execute()
+                    profile_already_updated = True
 
         @discord_client.event
         async def on_message(message):
@@ -86,15 +99,14 @@ class Main(object):
                             else:
                                 relevant_incremented_stats[game_context] = [incremented_stats]
 
-                    temp_snapshots[profile_name] = profile
                     await asyncio.sleep(1)  # the pubgtracker api does not allow more than 1 query per second
 
                 # We save the retreived stats only if every profile has been successfully retreived
                 for profile_name in temp_snapshots.keys():
                     self.snapshots[profile_name] = temp_snapshots[profile_name]
 
-                await broadcast_incremented_stats(incremented_stats_wins, game_context, "WIN", discord_client, broadcast_channel)
-                await broadcast_incremented_stats(incremented_stats_toptens, game_context, "TOP 10", discord_client, broadcast_channel)
+                await broadcast_incremented_stats(incremented_stats_wins, "WIN", broadcast_channel, True)
+                await broadcast_incremented_stats(incremented_stats_toptens, "TOP 10", broadcast_channel, False)
 
                 await asyncio.sleep(self.tracking_interval)
 
