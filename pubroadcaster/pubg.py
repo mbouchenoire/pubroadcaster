@@ -22,6 +22,9 @@ class Profile(object):
         self.name = profile_name
 
     def __get_field__(self, context: GameContext, field_name: str, field_value: str):
+        if not hasattr(self, "Stats"):
+            return None
+
         for regional_stats in self.Stats:
             if regional_stats["Region"] == context.region and regional_stats["Season"] == context.season and regional_stats["Match"] == context.mode:
                 for stat in regional_stats["Stats"]:
@@ -45,9 +48,10 @@ class Profile(object):
         if dec_value is not None:
             return round(dec_value, 1)
 
-        log.warning(field_name + " field has value 'None' for " + context.mode + "@" + context.region)
+        warn = "{} field has value 'None' for {}: {}@{}".format(field_name, self.name, context.mode, context.region)
+        log.warning(warn)
 
-        return 0
+        return -1
 
     def __get_increment_from__(self, old_profile, context: GameContext, field_name: str) -> float:
         up_to_date_field_value = self.__get_field_numerical_value__(context, field_name)
