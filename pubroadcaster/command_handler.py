@@ -31,12 +31,12 @@ class CommandHandler(object):
 
         mode = mode_region_text.split("@")[0]
 
-        if mode not in self.ALLOWED_MODES:
+        if mode not in CommandHandler._ALLOWED_MODES:
             return await self._discord_client.send_message(command.channel, "'" + mode + "' is not a valid mode!")
 
         region = mode_region_text.split("@")[1]
         
-        if region not in self.ALLOWED_REGIONS:
+        if region not in CommandHandler._ALLOWED_REGIONS:
             return await self._discord_client.send_message(command.channel, "'" + region + "' is not a valid region!")
 
         profile = self._pubg_tracker.retreive_profile(profile_name)
